@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -31,10 +32,24 @@ type Message struct {
 	TTL   time.Duration
 }
 
+
+func (m *Message) ToBytes()[]byte {
+	switch m.Cmd{
+	case CMDSet:
+		cmd := fmt.Sprintf("%s %s %s %s", m.Cmd, m.key, m.Value, m.TTL)
+		return []byte(cmd)
+	case CMDGet:
+		cmd := fmt.Sprintf("%s %s", m.Cmd, m.key)
+		return []byte(cmd)
+
+	default:
+		panic("unknown command")
+	}
+}
 func parseMessage(raw []byte)(*Message, error){
 	var (
-		rawStr = string(raw)
-		parts = strings.Split(rawStr, " ")
+		rawStr = strings.TrimSpace(string(raw))
+		parts = strings.Fields(rawStr)
 	)
 	if len(parts) < 2 {
 		// respond
@@ -59,7 +74,7 @@ func parseMessage(raw []byte)(*Message, error){
 			return nil, err
 		}
 
-		msg.TTL = time.Duration(ttl) 
+		msg.TTL = time.Duration(ttl) * time.Second
 	}
 
 	return msg, nil

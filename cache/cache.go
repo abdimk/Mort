@@ -47,10 +47,13 @@ func (c *Cache) Get(key []byte)([]byte, error){
 
 	keyStr := string(key)
 	val, ok := c.data[string(key)]
-
+	
 	if !ok{
-		return nil, fmt.Errorf("key (%s) not be found", keyStr)
+		return nil, fmt.Errorf("key (%s) not found", keyStr)
 	}
+
+	log.Printf("Get %s = %s \n", string(key), string(val))
+	
 	return val,nil
 }
 
@@ -61,9 +64,15 @@ func (c *Cache) Set(key, value []byte, ttl time.Duration) error{
 
 	c.data[string(key)] = value
 	log.Printf("SET %s to %s\n", string(key), string(value))
-	go func (){
-		<- time.After(ttl)
-		delete(c.data, string(key))
-	}()
+	
+	if ttl > 0 {
+
+		go func (){
+			<- time.After(ttl)
+			c.lock.Lock()
+			delete(c.data, string(key))
+			c.lock.Unlock()
+		}()
+	}
 	return  nil
 }

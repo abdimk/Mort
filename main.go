@@ -1,28 +1,26 @@
 package main
 
 import (
-	"log"
-	"net"
-	"time"
+	"flag"
 
 	"github.com/abdimk/Mort/cache"
 )
 
 func main(){
+	var (
+		listenAddr = flag.String("listenaddr", ":3000", "listen address of the server")
+		leaderAddr = flag.String("leaderaddr", "", "listen address of the leader")
+	)
+	
+	flag.Parse()
+
 	options := SeverOptions{
-		ListenAddr: ":3000",
-		IsLeader: true,
+		ListenAddr: *listenAddr,
+		IsLeader: len(*leaderAddr)==0,
+		LeaderAddr: *leaderAddr,
 	}
 
-	go func () {
-		time.Sleep(time.Second)
-		conn, err := net.Dial("tcp", ":3000")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		conn.Write([]byte("SET foo bar 2500"))
-	}()
+	
 
 	server := NewServer(options, cache.New())
 	server.Start()
