@@ -71,6 +71,10 @@ func (s *Server) Start() error{
 func (s *Server) handelConnection(conn net.Conn){
 	defer conn.Close()
 
+	if s.IsLeader {
+		s.followers[conn] = struct{}{}
+	}
+
 
 	fmt.Println("connection made:", conn.RemoteAddr())
 	buf := make([]byte, 2048)
@@ -137,6 +141,7 @@ func (s *Server) handelSetCmd(conn net.Conn, msg *Message) error {
 
 func (s *Server) sendToFollowers(ctx context.Context, msg *Message) error {
 	for conn := range s.followers {
+		fmt.Println("forwarding key to followers")
 		_, err := conn.Write(msg.ToBytes())
 
 		if err != nil{

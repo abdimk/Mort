@@ -68,7 +68,10 @@ func parseMessage(raw []byte)(*Message, error){
 		}
 
 		msg.Value = []byte(parts[2])
-		ttl, err := strconv.Atoi(parts[3])	
+		
+		t, _ := time.ParseDuration(parts[3])
+		fmt.Println(t)
+		ttl, err := strconv.Atoi(t.Seconds())	
 
 		if err != nil {
 			return nil, err
