@@ -52,7 +52,6 @@ func parseMessage(raw []byte)(*Message, error){
 		parts = strings.Fields(rawStr)
 	)
 	if len(parts) < 2 {
-		// respond
 		return nil, errors.New("invalid protocol format")
 	}
 
@@ -69,9 +68,8 @@ func parseMessage(raw []byte)(*Message, error){
 
 		msg.Value = []byte(parts[2])
 		
-		t, _ := time.ParseDuration(parts[3])
-		fmt.Println(t)
-		ttl, err := strconv.Atoi(t.Seconds())	
+		
+		ttl, err := strconv.Atoi(parts[3])	
 
 		if err != nil {
 			return nil, err
