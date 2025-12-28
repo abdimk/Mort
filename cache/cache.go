@@ -52,7 +52,7 @@ func (c *Cache) Get(key []byte)([]byte, error){
 		return nil, fmt.Errorf("key (%s) not found", keyStr)
 	}
 
-	log.Printf("Get %s = %s \n", string(key), string(val))
+	log.Printf("\nGet %s = %s \n", string(key), string(val))
 	
 	return val,nil
 }
@@ -63,7 +63,7 @@ func (c *Cache) Set(key, value []byte, ttl time.Duration) error{
 	defer c.lock.Unlock()
 
 	c.data[string(key)] = value
-	log.Printf("SET %s to %s\n", string(key), string(value))
+	log.Printf("\nSET %s to %s\n", string(key), string(value))
 	
 	if ttl > 0 {
 

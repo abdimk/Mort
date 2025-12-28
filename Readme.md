@@ -4,5 +4,5 @@
 </main>
 <div>
 
-<p align="center">Real-Time Distributed Cache for Scholars.et</p>
+<p align="center">Real-Time Distributed Cache</p>
 <p align="center"><em>This is for experimental propose </em></p>

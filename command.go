@@ -46,6 +46,7 @@ func (m *Message) ToBytes()[]byte {
 		panic("unknown command")
 	}
 }
+
 func parseMessage(raw []byte)(*Message, error){
 	var (
 		rawStr = strings.TrimSpace(string(raw))
@@ -69,13 +70,17 @@ func parseMessage(raw []byte)(*Message, error){
 		msg.Value = []byte(parts[2])
 		
 		
-		ttl, err := strconv.Atoi(parts[3])	
+		ttl, err := time.ParseDuration(parts[3])
 
 		if err != nil {
-			return nil, err
-		}
+			sec, err2 := strconv.Atoi(parts[3])
+			if err2 != nil{
+				return nil, err
+			}
+			ttl = time.Duration(sec) * time.Second
+		} 
 
-		msg.TTL = time.Duration(ttl) * time.Second
+		msg.TTL = ttl
 	}
 
 	return msg, nil

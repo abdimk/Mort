@@ -51,7 +51,7 @@ func (s *Server) Start() error{
 				}
 				return
 			}
-			fmt.Println("connected with leader:", s.LeaderAddr)
+			fmt.Println("connected with leader", s.LeaderAddr)
 			s.handelConnection(conn)
 		}()
 	
@@ -76,6 +76,7 @@ func (s *Server) handelConnection(conn net.Conn){
 	}
 
 
+	// conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	fmt.Println("connection made:", conn.RemoteAddr())
 	buf := make([]byte, 2048)
 
@@ -83,8 +84,16 @@ func (s *Server) handelConnection(conn net.Conn){
 	for {
 		n ,err := conn.Read(buf)
 
+
 		if err != nil {
 			log.Printf("conn read error: %s\n", err)
+			if err == io.EOF {
+				// fmt.Println(s.followers)
+				last = s.followers[len(s.followers)-1]
+				delete(s.followers, s.followers[len(s.followers)-1])
+				log.Printf("client disconected from the network:%s\n",err)
+				return
+			}
 			break
 		}
 

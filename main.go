@@ -4,8 +4,8 @@ import (
 	"flag"
 
 	"github.com/abdimk/Mort/cache"
-)
 
+)
 func main(){
 
 	var (
@@ -38,7 +38,13 @@ func main(){
 
 	// fmt.Printf("Msg: %v", string(buf[:n]))
 
+	// comd := []byte("SET Foo Bar 40000")
+	// k,err := parseMessage(comd)
+	// if err != nil{
+	// 	fmt.Println(err)
+	// }
 
+	// fmt.Println(reflect.TypeOf(k.TTL))
 
 
 	
