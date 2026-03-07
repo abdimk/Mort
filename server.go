@@ -89,8 +89,8 @@ func (s *Server) handelConnection(conn net.Conn){
 			log.Printf("conn read error: %s\n", err)
 			if err == io.EOF {
 				// fmt.Println(s.followers)
-				last = s.followers[len(s.followers)-1]
-				delete(s.followers, s.followers[len(s.followers)-1])
+				// last := s.followers[len(s.followers)-1]
+				// delete(s.followers, s.followers[len(s.followers)-1])
 				log.Printf("client disconected from the network:%s\n",err)
 				return
 			}

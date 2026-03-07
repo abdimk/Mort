@@ -22,7 +22,7 @@ func main(){
 	}
 
 	// conn, err := net.Dial("tcp", ":3000")
-	// if err != nil {
+	// if err != nil { 
 	// 	fmt.Println("error while tring to dile the leader", err.Error())
 	// }
 
