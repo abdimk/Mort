@@ -25,7 +25,7 @@ func (c *Cache) Delete(key []byte) error {
 	_, ok := c.data[string(key)]
 
 	if !ok {
-		return fmt.Errorf("key (%s) not found", string(key))
+		return fmt.Errorf("key (%s) not found\n", string(key))
 	}
 	delete(c.data, string(key))
 
@@ -49,7 +49,7 @@ func (c *Cache) Get(key []byte)([]byte, error){
 	val, ok := c.data[string(key)]
 	
 	if !ok{
-		return nil, fmt.Errorf("key (%s) not found", keyStr)
+		return nil, fmt.Errorf("key (%s) not found\n", keyStr)
 	}
 
 	log.Printf("\nGet %s = %s \n", string(key), string(val))

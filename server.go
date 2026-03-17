@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
 	"github.com/abdimk/Mort/cache"
 )
@@ -44,17 +45,13 @@ func (s *Server) Start() error{
 		go func (){
 			conn, err := net.Dial("tcp", s.LeaderAddr)
 			if err != nil {
-				if err == io.EOF{
-					log.Println("leader closed connection")
-				}else{
-					log.Println("read error:", err)
-				}
+				log.Printf("failed to connect to leader %s: %s", s.LeaderAddr, err)
 				return
 			}
-			fmt.Println("connected with leader", s.LeaderAddr)
+			log.Printf("connected to leader: %s", s.LeaderAddr)
 			s.handelConnection(conn)
 		}()
-	
+
 	}
 
 	for {
@@ -69,45 +66,49 @@ func (s *Server) Start() error{
 }
 
 func (s *Server) handelConnection(conn net.Conn){
-	defer conn.Close()
+	defer func(){
+		if s.IsLeader {
+			delete(s.followers, conn)
+		}
+		conn.Close()
+	}()
 
 	if s.IsLeader {
 		s.followers[conn] = struct{}{}
 	}
 
-
-	// conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	fmt.Println("connection made:", conn.RemoteAddr())
+	log.Printf("connection made: %s", conn.RemoteAddr())
 	buf := make([]byte, 2048)
 
-
 	for {
-		n ,err := conn.Read(buf)
-
+		conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+		n, err := conn.Read(buf)
 
 		if err != nil {
-			log.Printf("conn read error: %s\n", err)
 			if err == io.EOF {
-				// fmt.Println(s.followers)
-				// last := s.followers[len(s.followers)-1]
-				// delete(s.followers, s.followers[len(s.followers)-1])
-				log.Printf("client disconected from the network:%s\n",err)
+				log.Printf("connection closed: %s", conn.RemoteAddr())
 				return
 			}
-			break
+
+			if ne, ok := err.(net.Error); ok && ne.Timeout() {
+				log.Printf("connection timeout: %s", conn.RemoteAddr())
+				return
+			}
+
+			log.Printf("connection error: %s", err)
+			return
 		}
 
 		data := make([]byte, n)
 		copy(data, buf[:n])
 		s.handleCommand(conn, data)
 	}
-
 }
 
 func (s *Server) handleCommand(conn net.Conn, rawCmd []byte){
 	msg, err := parseMessage(rawCmd)
 	if err != nil{
-		fmt.Println("failed to parse command", err)
+		log.Printf("failed to parse command from %s: %s", conn.RemoteAddr(), err)
 		conn.Write([]byte(err.Error()))
 		return
 	}
@@ -115,15 +116,13 @@ func (s *Server) handleCommand(conn net.Conn, rawCmd []byte){
 		case CMDSet:
 			err = s.handelSetCmd(conn, msg)
 		case CMDGet:
-			err = s.handelGetCmd(conn, msg)			
+			err = s.handelGetCmd(conn, msg)
 	}
 
 	if err != nil {
-		fmt.Println("failed to parse command:", err)
-		conn.Write([]byte(err.Error()))	
+		log.Printf("command error from %s: %s", conn.RemoteAddr(), err)
+		conn.Write([]byte(err.Error()))
 	}
-
-	
 }
 
 func (s *Server) handelGetCmd(conn net.Conn, msg *Message) error {
@@ -150,11 +149,12 @@ func (s *Server) handelSetCmd(conn net.Conn, msg *Message) error {
 
 func (s *Server) sendToFollowers(ctx context.Context, msg *Message) error {
 	for conn := range s.followers {
-		fmt.Println("forwarding key to followers")
 		_, err := conn.Write(msg.ToBytes())
 
 		if err != nil{
-			fmt.Println("write to followers error:", err)
+			log.Printf("failed to forward to follower %s: %s", conn.RemoteAddr(), err)
+			delete(s.followers, conn)
+			conn.Close()
 			continue
 		}
 	}
