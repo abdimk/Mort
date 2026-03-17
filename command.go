@@ -17,9 +17,9 @@ const (
 )
 
 type MSGSet struct {
-	Key []byte
+	Key   []byte
 	Value []byte
-	TTL time.Duration
+	TTL   time.Duration
 }
 
 type MSGGet struct {
@@ -33,11 +33,10 @@ type Message struct {
 	TTL   time.Duration
 }
 
-
-func (m *Message) ToBytes()[]byte {
-	switch m.Cmd{
+func (m *Message) ToBytes() []byte {
+	switch m.Cmd {
 	case CMDSet:
-		cmd := fmt.Sprintf("%s %s %s %s", m.Cmd, m.key, m.Value, m.TTL)
+		cmd := fmt.Sprintf("%s %s %s %d", m.Cmd, m.key, m.Value, int64(m.TTL.Seconds()))
 		return []byte(cmd)
 	case CMDGet:
 		cmd := fmt.Sprintf("%s %s", m.Cmd, m.key)
@@ -48,10 +47,10 @@ func (m *Message) ToBytes()[]byte {
 	}
 }
 
-func parseMessage(raw []byte)(*Message, error){
+func parseMessage(raw []byte) (*Message, error) {
 	var (
 		rawStr = strings.TrimSpace(string(raw))
-		parts = strings.Fields(rawStr)
+		parts  = strings.SplitN(rawStr, " ", 4) // Split into max 4 parts: CMD, KEY, VALUE, TTL
 	)
 	if len(parts) < 2 {
 		return nil, errors.New("invalid protocol format")
@@ -62,24 +61,22 @@ func parseMessage(raw []byte)(*Message, error){
 		key: []byte(parts[1]),
 	}
 
-
 	if msg.Cmd == CMDSet {
 		if len(parts) < 4 {
 			return nil, errors.New("invalid SET command")
 		}
 
 		msg.Value = []byte(parts[2])
-		
-		
+
 		ttl, err := time.ParseDuration(parts[3])
 
 		if err != nil {
 			sec, err2 := strconv.Atoi(parts[3])
-			if err2 != nil{
+			if err2 != nil {
 				return nil, err
 			}
 			ttl = time.Duration(sec) * time.Second
-		} 
+		}
 
 		msg.TTL = ttl
 	}
